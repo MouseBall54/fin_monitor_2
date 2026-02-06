@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area 
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area 
 } from 'recharts';
 import { MacroIndicator, AnalysisState } from './types';
 import MacroCard from './components/MacroCard';
 import NewsSection from './components/NewsSection';
 import AnalysisReport from './components/AnalysisReport';
+import ComparisonDoc from './components/ComparisonDoc';
 import { fetchMacroAnalysis } from './services/geminiService';
 
 const MOCK_DATA: MacroIndicator[] = [
@@ -18,7 +19,7 @@ const MOCK_DATA: MacroIndicator[] = [
     change: 0,
     trend: 'neutral',
     category: 'monetary',
-    description: 'The target interest rate range set by the Federal Open Market Committee.',
+    description: '미국 연방공개시장위원회(FOMC)가 결정하는 타겟 금리 범위.',
     history: Array.from({ length: 10 }, (_, i) => ({ date: `2024-${12-i}`, value: 5.50 - (i * 0.05) }))
   },
   {
@@ -29,7 +30,7 @@ const MOCK_DATA: MacroIndicator[] = [
     change: -0.3,
     trend: 'down',
     category: 'real_economy',
-    description: 'Measure of the average change over time in the prices paid by consumers.',
+    description: '소비자가 구입하는 상품 및 서비스의 가격 변동을 측정하는 지표.',
     history: Array.from({ length: 10 }, (_, i) => ({ date: `2024-${12-i}`, value: 3.1 + (i * 0.1) }))
   },
   {
@@ -40,7 +41,7 @@ const MOCK_DATA: MacroIndicator[] = [
     change: 1.2,
     trend: 'up',
     category: 'markets',
-    description: 'A stock market index tracking the stock performance of 500 of the largest companies.',
+    description: '미국 상장 기업 500개의 성과를 추적하는 시장 지수.',
     history: Array.from({ length: 10 }, (_, i) => ({ date: `2024-${12-i}`, value: 5120 - (i * 20) }))
   },
   {
@@ -51,13 +52,15 @@ const MOCK_DATA: MacroIndicator[] = [
     change: 0.8,
     trend: 'up',
     category: 'commodities',
-    description: 'The current price of gold in the international spot market.',
+    description: '국제 현물 시장에서의 금 가격.',
     history: Array.from({ length: 10 }, (_, i) => ({ date: `2024-${12-i}`, value: 2320 - (i * 15) }))
   }
 ];
 
+type TabType = 'dashboard' | 'analysis' | 'comparison';
+
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'analysis'>('dashboard');
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [selectedIndicator, setSelectedIndicator] = useState<MacroIndicator>(MOCK_DATA[0]);
   const [analysis, setAnalysis] = useState<AnalysisState | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -85,46 +88,49 @@ const App: React.FC = () => {
         <div className="max-w-[1600px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white text-xl shadow-lg shadow-emerald-600/20">
-              <i className="fas fa-chart-line"></i>
+              <i className="fas fa-terminal"></i>
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight">MacroInsight <span className="text-emerald-500">Terminal</span></h1>
-              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-[0.2em]">Global Economic Monitor v3.0</p>
+              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-[0.2em]">TECHNICAL_AUDIT.md Generated</p>
             </div>
           </div>
 
           <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-lg border border-slate-800">
-            <button 
-              onClick={() => setActiveTab('dashboard')}
-              className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeTab === 'dashboard' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              Monitor Dashboard
-            </button>
-            <button 
-              onClick={() => setActiveTab('analysis')}
-              className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeTab === 'analysis' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              Technical Audit Report
-            </button>
+            {[
+              { id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-pie' },
+              { id: 'comparison', label: 'Gap Analysis', icon: 'fa-file-alt' },
+              { id: 'analysis', label: 'Tech Audit', icon: 'fa-microchip' }
+            ].map((tab) => (
+              <button 
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as TabType)}
+                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all flex items-center gap-2 ${
+                  activeTab === tab.id 
+                    ? 'bg-slate-800 text-white shadow-sm ring-1 ring-slate-700' 
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                }`}
+              >
+                <i className={`fas ${tab.icon} text-xs`}></i>
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex flex-col items-end">
-              <span className="text-xs text-slate-500 font-mono">SERVER STATUS</span>
-              <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                STABLE CONNECTION
-              </span>
-            </div>
+          <div className="hidden md:flex flex-col items-end">
+            <span className="text-[10px] text-slate-500 font-mono">NODE: SEOUL_HQ_01</span>
+            <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              LIVE DATA STREAMING
+            </span>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-[1600px] mx-auto p-6 space-y-6">
-        {activeTab === 'dashboard' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            {/* Left Column: Indicators Grid */}
+      <main className="max-w-[1600px] mx-auto p-6">
+        {activeTab === 'dashboard' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in duration-500">
+            {/* Left: Indicator Grid & Charts */}
             <div className="lg:col-span-8 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {MOCK_DATA.map((indicator) => (
@@ -137,17 +143,24 @@ const App: React.FC = () => {
                 ))}
               </div>
 
-              {/* Main Chart Section */}
+              {/* Chart Detail */}
               <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm">
                 <div className="flex justify-between items-center mb-8">
                   <div>
-                    <h2 className="text-2xl font-bold text-white mb-1">{selectedIndicator.name} Trend Analysis</h2>
+                    <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
+                      <span className="w-2 h-8 bg-emerald-500 rounded-full"></span>
+                      {selectedIndicator.name}
+                    </h2>
                     <p className="text-sm text-slate-400">{selectedIndicator.description}</p>
                   </div>
-                  <div className="flex gap-2">
-                    <button className="px-3 py-1 text-xs bg-slate-800 border border-slate-700 rounded text-slate-300 hover:bg-slate-700">1D</button>
-                    <button className="px-3 py-1 text-xs bg-slate-800 border border-slate-700 rounded text-slate-300 hover:bg-slate-700">1W</button>
-                    <button className="px-3 py-1 text-xs bg-emerald-600 border border-emerald-500 rounded text-white font-bold">1M</button>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-white mono leading-none">
+                      {selectedIndicator.value}
+                      <span className="text-sm text-slate-500 ml-1 font-normal">{selectedIndicator.unit}</span>
+                    </p>
+                    <p className={`text-xs font-bold mt-1 ${selectedIndicator.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {selectedIndicator.change >= 0 ? '+' : ''}{selectedIndicator.change}% (MTD)
+                    </p>
                   </div>
                 </div>
 
@@ -161,168 +174,94 @@ const App: React.FC = () => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="#475569" 
-                        fontSize={10} 
-                        tickLine={false} 
-                        axisLine={false}
-                        dy={10}
-                      />
-                      <YAxis 
-                        stroke="#475569" 
-                        fontSize={10} 
-                        tickLine={false} 
-                        axisLine={false}
-                        dx={-10}
-                        domain={['auto', 'auto']}
-                      />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', fontSize: '12px' }}
-                        itemStyle={{ color: '#10b981' }}
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="value" 
-                        stroke="#10b981" 
-                        strokeWidth={3}
-                        fillOpacity={1} 
-                        fill="url(#colorValue)" 
-                        animationDuration={2000}
-                      />
+                      <XAxis dataKey="date" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} dy={10} />
+                      <YAxis stroke="#475569" fontSize={10} tickLine={false} axisLine={false} dx={-10} domain={['auto', 'auto']} />
+                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px' }} />
+                      <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
-              {/* AI Market Outlook */}
-              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                  <i className="fas fa-brain text-8xl text-emerald-500"></i>
+              {/* AI Narrative */}
+              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 overflow-hidden group">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <i className="fas fa-magic text-emerald-400 group-hover:rotate-12 transition-transform"></i>
+                    Market Intelligence Summary
+                  </h3>
+                  <button onClick={handleRunAnalysis} className="text-xs text-slate-500 hover:text-emerald-400 transition-colors">
+                    <i className={`fas fa-sync-alt mr-2 ${isAnalyzing ? 'animate-spin' : ''}`}></i>
+                    Refresh Logic
+                  </button>
                 </div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-sm">
-                      <i className="fas fa-magic"></i>
-                    </div>
-                    <h3 className="text-lg font-bold text-white">Gemini Market Sentiment Engine</h3>
-                  </div>
-                  {isAnalyzing && (
-                    <div className="flex items-center gap-2 text-xs text-emerald-500 font-bold">
-                      <i className="fas fa-spinner animate-spin"></i>
-                      GENERATING INSIGHTS...
-                    </div>
-                  )}
-                </div>
-                
                 {analysis ? (
-                  <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                    <p className="text-slate-300 leading-relaxed italic">
-                      "{analysis.summary}"
+                  <div className="space-y-4">
+                    <p className="text-slate-300 leading-relaxed bg-slate-950/40 p-4 rounded-xl border border-slate-800/50">
+                      {analysis.summary}
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                      {analysis.keyTakeaways.map((takeaway, idx) => (
-                        <span key={idx} className="px-3 py-1 bg-slate-900 border border-slate-800 rounded-full text-xs text-emerald-400">
-                          • {takeaway}
-                        </span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {analysis.keyTakeaways.map((t, i) => (
+                        <div key={i} className="flex items-center gap-3 text-xs text-slate-400 bg-slate-800/30 px-3 py-2 rounded-lg border border-slate-700/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          {t}
+                        </div>
                       ))}
-                    </div>
-                    <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-500">System Risk Level:</span>
-                        <span className={`text-xs font-bold uppercase ${
-                          analysis.riskLevel === 'low' ? 'text-emerald-500' :
-                          analysis.riskLevel === 'medium' ? 'text-amber-500' : 'text-rose-500'
-                        }`}>
-                          {analysis.riskLevel}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-slate-600">Generated at {analysis.lastUpdated}</span>
                     </div>
                   </div>
                 ) : (
-                  <div className="h-32 flex flex-col items-center justify-center gap-3 text-slate-500 italic">
-                    <i className="fas fa-microchip text-2xl opacity-20"></i>
-                    <p>Initialize market analysis engine</p>
-                    <button 
-                      onClick={handleRunAnalysis}
-                      className="px-4 py-1.5 bg-emerald-600/20 border border-emerald-500/30 rounded text-emerald-400 text-xs font-bold hover:bg-emerald-600/30 transition-all"
-                    >
-                      RUN FULL AUDIT
-                    </button>
+                  <div className="h-24 flex items-center justify-center text-slate-600 italic text-sm">
+                    {isAnalyzing ? "Processing global macro signals..." : "Analysis engine standby."}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Right Column: Sidebar */}
+            {/* Right: Intelligence Sidebar */}
             <div className="lg:col-span-4 space-y-6">
               <NewsSection />
               
               <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                  <i className="fas fa-calendar text-blue-400"></i>
-                  Economic Calendar
-                </h3>
+                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Risk Heatmap</h3>
                 <div className="space-y-4">
                   {[
-                    { event: 'Initial Jobless Claims', time: 'Today 08:30', impact: 'High' },
-                    { event: 'Retail Sales MoM', time: 'Tomorrow 08:30', impact: 'Medium' },
-                    { event: 'Michigan Consumer Sentiment', time: 'Fri 10:00', impact: 'High' },
-                  ].map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 bg-slate-950/50 rounded-lg border border-slate-800">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-200">{item.event}</p>
-                        <p className="text-[10px] text-slate-500 uppercase">{item.time}</p>
+                    { label: 'Liquidity Risk', val: 24, color: 'bg-emerald-500' },
+                    { label: 'Inflation Pressure', val: 78, color: 'bg-rose-500' },
+                    { label: 'Geopolitical Volatility', val: 56, color: 'bg-amber-500' },
+                  ].map((r, i) => (
+                    <div key={i} className="space-y-1.5">
+                      <div className="flex justify-between text-[10px] font-bold">
+                        <span className="text-slate-400 uppercase">{r.label}</span>
+                        <span className="text-white">{r.val}%</span>
                       </div>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                        item.impact === 'High' ? 'bg-rose-500/10 text-rose-400' : 'bg-amber-500/10 text-amber-400'
-                      }`}>
-                        {item.impact}
-                      </span>
+                      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div className={`h-full ${r.color}`} style={{ width: `${r.val}%` }}></div>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border border-indigo-500/20 rounded-2xl p-6">
-                <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-widest mb-4">Market Correlations</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-400">BTC vs S&P500</span>
-                    <span className="text-emerald-400 font-bold">+0.82</span>
-                  </div>
-                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-emerald-500 h-full" style={{ width: '82%' }}></div>
-                  </div>
-                  <div className="flex justify-between text-xs mt-4">
-                    <span className="text-slate-400">Gold vs DXY</span>
-                    <span className="text-rose-400 font-bold">-0.65</span>
-                  </div>
-                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-rose-500 h-full" style={{ width: '65%' }}></div>
-                  </div>
-                </div>
+              <div className="p-5 bg-gradient-to-br from-emerald-500/10 to-transparent border border-emerald-500/20 rounded-2xl">
+                <p className="text-[10px] font-bold text-emerald-500 uppercase mb-2">System Update</p>
+                <p className="text-xs text-slate-300 leading-snug">
+                  현재 CPI와 Fed Rate의 상관계수가 <strong>0.89</strong>를 기록하며 통화정책 긴밀도가 상승하고 있습니다.
+                </p>
               </div>
             </div>
-
           </div>
-        ) : (
-          <AnalysisReport />
         )}
+
+        {activeTab === 'analysis' && <AnalysisReport />}
+        {activeTab === 'comparison' && <ComparisonDoc />}
       </main>
 
-      {/* Footer Info */}
-      <footer className="border-t border-slate-800 p-8 mt-12 bg-slate-950">
-        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 opacity-50">
-            <i className="fas fa-shield-alt text-slate-400"></i>
-            <span className="text-xs font-medium">End-to-end encrypted macro analysis channel</span>
-          </div>
-          <div className="flex gap-6 text-slate-600 text-[10px] font-bold uppercase tracking-widest">
-            <a href="#" className="hover:text-emerald-500 transition-colors">Documentation</a>
-            <a href="#" className="hover:text-emerald-500 transition-colors">API Reference</a>
-            <a href="#" className="hover:text-emerald-500 transition-colors">Security Audit</a>
+      <footer className="mt-12 border-t border-slate-800 p-8 bg-slate-950/50">
+        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center opacity-40 hover:opacity-100 transition-opacity">
+          <p className="text-[10px] font-mono tracking-widest uppercase">© 2025 MacroInsight Terminal. All rights reserved.</p>
+          <div className="flex gap-4 text-[10px] font-bold uppercase">
+            <span className="text-emerald-500">Audit Status: PASS</span>
+            <span className="text-slate-500">Compliance: T-0</span>
           </div>
         </div>
       </footer>
